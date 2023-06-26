@@ -136,10 +136,44 @@ size_t slice_size( void* slice )
 
 void* slice_resize( void* slice, size_t size )
 {
+    return slice_grow( slice_shrink( slice, size ), size );
+}
+
+
+void* slice_grow( void* slice, size_t size )
+{
     slice_t* src = slice_meta( slice );
+    if ( size <= src->size )
+    {
+        return (void*) src->data;
+    }
     if ( slice_fit_cap( &src, size ) )
     {
-        return src->data;
+        src->size = size;
+        return (void*) src->data;
+    }
+    return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+}
+
+
+void* slice_shrink( void* slice, size_t size )
+{
+    slice_t* src = slice_meta( slice );
+    if ( size >= src->size )
+    {
+        return (void*) src->data;
+    }
+    if ( src->free != NULL )
+    {
+        for ( size_t i = size; i < src->size; i++ )
+        {
+            src->free( (void**) ( src->data + src->per_size * i ) );
+        }
+    }
+    if ( slice_fit_cap( &src, size ) )
+    {
+        src->size = size;
+        return (void*) src->data;
     }
     return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
 }
@@ -192,12 +226,68 @@ void* slice_append( void* slice, ... )
 }
 
 
+void* slice_insert( void* slice, size_t index, size_t size, ... )
+{
+    va_list ap;
+    va_start( ap, size );
+    slice_t* src = slice_meta( slice );
+    if ( index > src->size )
+    {
+        return ( fprintf( stderr, "[ERRO]: insert index out of bounds.\n" ), src );
+    }
+    if ( slice_fit_cap( &src, src->size + size ) )
+    {
+        memmove( src->data + src->per_size * ( index + size ), src->data + src->per_size * index, src->per_size * ( src->size - index ) );
+        void* data = va_arg( ap, void* );
+        if ( src->copy != NULL )
+        {
+            for ( size_t i = 0; i < size; i++ )
+            {
+                src->copy( (void**) (src->data + src->per_size * ( index + i ) ), (char*) data + src->per_size * i );
+            }
+        }
+        else
+        {
+            switch ( src->type )
+            {        
+                case SLICE_CHAR:    
+                case SLICE_WCHAR:   
+                case SLICE_I32:     
+                case SLICE_U32:     
+                case SLICE_F32:     
+                case SLICE_I64:     
+                case SLICE_U64:     
+                case SLICE_F64:     
+                case SLICE_PTR:
+                case SLICE_STR:
+                case SLICE_GENERIC:     
+                    memmove( src->data + src->per_size * index, data, src->per_size * size );
+                    break;
+                default:
+                {
+                    return ( fprintf( stderr, "[ERRO]: illegal type.\n" ), exit(1), NULL );
+                }
+            }
+        }
+        src->size += size;
+        va_end( ap );
+        return (void*) src->data;
+    }
+    va_end( ap );
+    return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+}
+
+
 void* slice_pop( void* slice, size_t index )
 {
     slice_t* src = slice_meta( slice );
     if ( index >= src->size )
     {
         return ( fprintf( stderr, "[ERRO]: pop index out of bounds.\n" ), slice );
+    }
+    if ( src->free != NULL )
+    {
+        src->free( (void**) src->data + src->per_size * index );
     }
     memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + 1 ), src->per_size * ( src->size - index - 1 ) );
     if ( slice_fit_cap( &src, --src->size ) )

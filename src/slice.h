@@ -42,10 +42,13 @@ typedef struct
 // functions
 void*   slice_new( slice_args_t args );
 void    slice_delete( void* slice );
-size_t  slice_size( void* slice );                      // get the current size of the slice. 
-void*   slice_resize( void* slice, size_t size );       // Return new address for the array. 
-void*   slice_append( void* slice, /* T value */ ... ); // with SLICE_GENERIC, pass in the address of the struct. Return new address for the array. 
-void*   slice_pop( void* slice, size_t index );         // Return new address for the array. 
+size_t  slice_size( void* slice );                                      // get the current size of the slice. 
+void*   slice_resize( void* slice, size_t size );                       // Return new address if the array. You need to make sure data is valid if `slice_free` is set. 
+void*   slice_grow( void* slice, size_t size );                         // Return new address of the array. Do nothing if size is not bigger than current size. 
+void*   slice_shrink( void* slice, size_t size );                       // Return new address of the array. Do nothing if size is not smaller than current size. 
+void*   slice_append( void* slice, /* T value */ ... );                 // with SLICE_GENERIC, pass in the address of the struct. Return new address of the array. 
+void*   slice_insert( void* slice, size_t index, size_t size, ... );    // Return new address of the array. 
+void*   slice_pop( void* slice, size_t index );                         // Return new address of the array. 
 
 
 
