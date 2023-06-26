@@ -2,20 +2,29 @@
 
 typedef struct
 {
-    slice_type_t    type;
-    size_t          size;
-    size_t          capacity;
-    size_t          per_size;
-    slice_copy      copy;
-    slice_free      free;
-    char            data[];
+    slice_type_t        type;
+    size_t              size;
+    size_t              capacity;
+    size_t              per_size;
+    slice_deep_copy     copy;
+    slice_desctructor   free;
+    slice_alloc_t       allocator;
+    char                data[];
 } slice_t;
+
+
+static inline void* default_realloc( void* ptr, size_t old_size, size_t new_size )
+{
+    (void) old_size;
+    return realloc( ptr, new_size );
+}
 
 
 static inline bool slice_fit_cap( slice_t** src, size_t size )
 {
     size_t cap;
     size_t capacity;
+    size_t old_size = sizeof ( slice_t ) + (*src)->capacity;
     if ( (*src)->capacity == 0 )
     {
         (*src)->capacity = 16;
@@ -23,7 +32,7 @@ static inline bool slice_fit_cap( slice_t** src, size_t size )
     }
     else
     {
-    capacity = (*src)->capacity;
+        capacity = (*src)->capacity;
     }
     if ( size < 16 ) cap = 16;
     else cap = size;
@@ -40,9 +49,6 @@ static inline bool slice_fit_cap( slice_t** src, size_t size )
                 (*src)->capacity += 512;
             }
         }
-        if ( (*src)->capacity == capacity ) return true;
-        (*src) = realloc( (*src), sizeof ( slice_t ) + (*src)->per_size * ( (*src)->capacity ) );
-        if ( (*src) == NULL ) return false;        
     }
     else
     {
@@ -62,10 +68,10 @@ static inline bool slice_fit_cap( slice_t** src, size_t size )
             }
             else break;
         }
-        if ( (*src)->capacity == capacity ) return true;
-        *src = realloc( *src, sizeof ( slice_t ) + (*src)->per_size * ( (*src)->capacity ) );
-        if ( (*src) == NULL ) return false;
     }
+    if ( (*src)->capacity == capacity ) return true;
+    (*src) = (*src)->allocator.realloc( (*src), old_size,  sizeof ( slice_t ) + (*src)->per_size * ( (*src)->capacity ) );
+    if ( (*src) == NULL ) return false; 
     return true;
 }
 
@@ -95,16 +101,40 @@ void* slice_new( slice_args_t args )
         case SLICE_GENERIC: size = args.size;                               break;
         default:            fprintf( stderr, "[ERRO]: illegal type.\n" );   exit(1);
     }
-    slice_t* slice = malloc( sizeof (slice_t) );
-    *slice = (slice_t)
+    slice_t* slice;
+    if ( args.allocator.malloc != NULL && args.allocator.realloc != NULL )
     {
-        .type       = args.type,
-        .size       = 0,
-        .capacity   = 0,
-        .per_size   = size,
-        .copy       = args.copy,
-        .free       = args.free,
-    };
+        slice = args.allocator.malloc( sizeof (slice_t) );
+        *slice = (slice_t)
+        {
+            .type       = args.type,
+            .size       = 0,
+            .capacity   = 0,
+            .per_size   = size,
+            .copy       = args.copy,
+            .free       = args.free,
+            .allocator  = args.allocator,
+        };
+    }
+    else
+    {
+        slice = malloc( sizeof (slice_t) );
+        *slice = (slice_t)
+        {
+            .type       = args.type,
+            .size       = 0,
+            .capacity   = 0,
+            .per_size   = size,
+            .copy       = args.copy,
+            .free       = args.free,
+            .allocator  = 
+            {
+                .malloc     = malloc,
+                .realloc    = default_realloc,
+                .free       = free,
+            },
+        };
+    }
     if ( slice_fit_cap( &slice, 0 ) )
     {
         return (void*) slice->data;
@@ -123,7 +153,10 @@ void slice_delete( void* slice )
             src->free( (void**) ( src->data + src->per_size * i ) );
         }
     }
-    free( src );
+    if ( src->allocator.free != NULL )
+    {
+        src->allocator.free( src );
+    }
 }
 
 
