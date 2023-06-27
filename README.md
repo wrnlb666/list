@@ -17,7 +17,7 @@ int main( void )
         arr = list_append( arr, i );
     }
 
-    // how to access list value? Like how you would access a normal array!
+    // how to access list value? exactly like how you would access a normal array!
     for ( int i = 0; i < 30; i++ )
     {
         printf( "%3d", arr[i] );
