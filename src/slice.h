@@ -23,10 +23,10 @@ typedef enum
     SLICE_F64,      // double
     SLICE_PTR,      // void*
     SLICE_STR,      // char*
-    SLICE_GENERIC,  // struct
+    SLICE_STRUCT,   // struct
 } slice_type_t;
 
-typedef void (*slice_deep_copy)( void** dest, const void* restrict src );   // if not specified, memcpy will be performed for SLICE_GENERIC, shallow copy for all others
+typedef void (*slice_deep_copy)( void** dest, const void* restrict src );   // if not specified, memcpy will be performed for SLICE_STRUCT, shallow copy for all others
 typedef void (*slice_desctructor)( void** ptr );                            // ptr will be the address of that element, so void** for SLICE_PTR
 
 typedef void* (*slice_malloc)( size_t size );                                       // malloc for custom allocator
@@ -59,7 +59,7 @@ size_t  slice_size( void* slice );                                      // get t
 void*   slice_resize( void* slice, size_t size );                       // Return new address if the array. You need to make sure data is valid if `slice_desctructor` is set. 
 void*   slice_grow( void* slice, size_t size );                         // Return new address of the array. Do nothing if size is not bigger than current size. 
 void*   slice_shrink( void* slice, size_t size );                       // Return new address of the array. Do nothing if size is not smaller than current size. 
-void*   slice_append( void* slice, /* T value */ ... );                 // with SLICE_GENERIC, pass in the address of the struct. Return new address of the array. 
+void*   slice_append( void* slice, /* T value */ ... );                 // with SLICE_STRUCT, pass in the address of the struct. Return new address of the array. 
 void*   slice_insert( void* slice, size_t index, size_t size, ... );    // Return new address of the array. 
 void*   slice_pop( void* slice, size_t index );                         // Return new address of the array. 
 
@@ -67,7 +67,6 @@ void*   slice_pop( void* slice, size_t index );                         // Retur
 
 
 
-// macro
 // slice_new( slice_type_t type, size_t size, slice_deep_copy copy, slice_desctructor free, slice_alloc_t allocator );
 #define slice_new_args( ... )               slice_new( (slice_args_t) { __VA_ARGS__ } );            
 

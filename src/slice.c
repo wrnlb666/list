@@ -24,7 +24,6 @@ static inline bool slice_fit_cap( slice_t** src, size_t size )
 {
     size_t cap;
     size_t capacity;
-    size_t old_size = sizeof ( slice_t ) + (*src)->capacity;
     if ( (*src)->capacity == 0 )
     {
         (*src)->capacity = 16;
@@ -34,6 +33,7 @@ static inline bool slice_fit_cap( slice_t** src, size_t size )
     {
         capacity = (*src)->capacity;
     }
+    size_t old_size = sizeof (slice_t) + (*src)->per_size * capacity;
     if ( size < 16 ) cap = 16;
     else cap = size;
     if ( cap >= (*src)->capacity )
@@ -98,7 +98,7 @@ void* slice_new( slice_args_t args )
         case SLICE_F64:     size = sizeof ( double );                       break;
         case SLICE_PTR:     size = sizeof ( void* );                        break;
         case SLICE_STR:     size = sizeof ( char* );                        break;
-        case SLICE_GENERIC: size = args.size;                               break;
+        case SLICE_STRUCT:  size = args.size;                               break;
         default:            fprintf( stderr, "[ERRO]: illegal type.\n" );   exit(1);
     }
     slice_t* slice;
@@ -238,7 +238,7 @@ void* slice_append( void* slice, ... )
                 case SLICE_F64:     ( (double*)     src->data )[ src->size ] = va_arg( ap, double );    break;
                 case SLICE_PTR:     ( (void**)      src->data )[ src->size ] = va_arg( ap, void* );     break;
                 case SLICE_STR:     ( (char**)      src->data )[ src->size ] = va_arg( ap, void* );     break;
-                case SLICE_GENERIC:
+                case SLICE_STRUCT:
                 {
                     void* data = va_arg( ap, void* );
                     memcpy( src->data + src->per_size * src->size, data, src->per_size );
@@ -293,7 +293,7 @@ void* slice_insert( void* slice, size_t index, size_t size, ... )
                 case SLICE_F64:     
                 case SLICE_PTR:
                 case SLICE_STR:
-                case SLICE_GENERIC:     
+                case SLICE_STRUCT:     
                     memmove( src->data + src->per_size * index, data, src->per_size * size );
                     break;
                 default:
