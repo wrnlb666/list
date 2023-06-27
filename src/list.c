@@ -17,14 +17,14 @@ typedef struct
 } list_t;
 
 
-static inline void* default_realloc( void* ptr, size_t old_size, size_t new_size )
+static inline void* default_realloc( void* restrict ptr, size_t old_size, size_t new_size )
 {
     (void) old_size;
     return realloc( ptr, new_size );
 }
 
 
-static inline bool list_fit_cap( list_t** src, size_t size )
+static inline bool list_fit_cap( list_t** restrict src, size_t size )
 {
     size_t cap;
     size_t capacity;
@@ -80,7 +80,7 @@ static inline bool list_fit_cap( list_t** src, size_t size )
 }
 
 
-static inline list_t* list_meta( void* src )
+static inline list_t* list_meta( void* restrict src )
 {
     if ( src == NULL ) return ( fprintf( stderr, "[ERRO]: NULL pointer cannot be dereferenced.\n" ), exit(1), NULL );
     return (list_t*) ( (char*) src - offsetof( list_t, data ) );
@@ -109,6 +109,7 @@ void* list_new( list_args_t args )
     if ( args.alloc.malloc != NULL && args.alloc.realloc != NULL )
     {
         list = args.alloc.malloc( sizeof (list_t) );
+        if ( list == NULL ) return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
         *list = (list_t)
         {
             .type       = args.type,
@@ -123,6 +124,7 @@ void* list_new( list_args_t args )
     else
     {
         list = malloc( sizeof (list_t) );
+        if ( list == NULL ) return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
         *list = (list_t)
         {
             .type       = args.type,
@@ -147,7 +149,7 @@ void* list_new( list_args_t args )
 }
 
 
-void list_delete( void* list )
+void list_delete( void* restrict list )
 {
     list_t* src = list_meta( list );
     if ( src->free != NULL )
@@ -164,20 +166,20 @@ void list_delete( void* list )
 }
 
 
-size_t list_len( void* list )
+size_t list_len( void* restrict list )
 {
     list_t* src = list_meta( list );
     return src->size;
 }
 
 
-void* list_resize( void* list, size_t size )
+void* list_resize( void* restrict list, size_t size )
 {
     return list_grow( list_shrink( list, size ), size );
 }
 
 
-void* list_grow( void* list, size_t size )
+void* list_grow( void* restrict list, size_t size )
 {
     list_t* src = list_meta( list );
     if ( size <= src->size )
@@ -193,7 +195,7 @@ void* list_grow( void* list, size_t size )
 }
 
 
-void* list_shrink( void* list, size_t size )
+void* list_shrink( void* restrict list, size_t size )
 {
     list_t* src = list_meta( list );
     if ( size >= src->size )
@@ -216,7 +218,7 @@ void* list_shrink( void* list, size_t size )
 }
 
 
-void* list_append( void* list, ... )
+void* list_append( void* restrict list, ... )
 {
     va_list ap;
     va_start( ap, list );
@@ -226,7 +228,7 @@ void* list_append( void* list, ... )
         if ( src->copy != NULL )
         {
             void* data = va_arg( ap, void* );
-            src->copy( (void**) (src->data + src->per_size * src->size ), data );
+            src->copy( (void**) ( src->data + src->per_size * src->size ), data );
         }
         else
         {
@@ -263,7 +265,56 @@ void* list_append( void* list, ... )
 }
 
 
-void* list_insert( void* list, size_t index, size_t size, ... )
+void* list_insert( void* restrict list, size_t index, ... )
+{
+    va_list ap;
+    va_start( ap, index );
+    list_t* src = list_meta( list );
+    if ( index > src->size )
+    {
+        return ( fprintf( stderr, "[ERRO]: insert index out of bounds.\n" ), src );
+    }
+    if ( list_fit_cap( &src, src->size + 1 ) )
+    {
+        memmove( src->data + src->per_size * ( index + 1 ), src->data + src->per_size * index, src->per_size * ( src->size - index ) );
+        void* data = va_arg( ap, void* );
+        if ( src->copy != NULL )
+        {
+            src->copy( (void**) ( src->data + src->per_size * index ), data );
+        }
+        else
+        {
+            switch ( src->type )
+            {        
+                case LIST_CHAR:    
+                case LIST_WCHAR:   
+                case LIST_I32:     
+                case LIST_U32:     
+                case LIST_F32:     
+                case LIST_I64:     
+                case LIST_U64:     
+                case LIST_F64:     
+                case LIST_PTR:
+                case LIST_STR:
+                case LIST_STRUCT:
+                    memmove( src->data + src->per_size * index, data, src->per_size );
+                    break;
+                default:
+                {
+                    return ( fprintf( stderr, "[ERRO]: illegal type.\n" ), exit(1), NULL );
+                }
+            }
+        }
+        src->size++;
+        va_end( ap );
+        return (void*) src->data;
+    }
+    va_end( ap );
+    return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+}
+
+
+void* list_inserts( void* restrict list, size_t index, size_t size, ... )
 {
     va_list ap;
     va_start( ap, size );
@@ -280,7 +331,7 @@ void* list_insert( void* list, size_t index, size_t size, ... )
         {
             for ( size_t i = 0; i < size; i++ )
             {
-                src->copy( (void**) (src->data + src->per_size * ( index + i ) ), (char*) data + src->per_size * i );
+                src->copy( (void**) ( src->data + src->per_size * ( index + i ) ), (char*) data + ( src->per_size * i ) );
             }
         }
         else
@@ -315,7 +366,7 @@ void* list_insert( void* list, size_t index, size_t size, ... )
 }
 
 
-void* list_pop( void* list, size_t index )
+void* list_pop( void* restrict list, size_t index )
 {
     list_t* src = list_meta( list );
     if ( index >= src->size )
@@ -324,7 +375,7 @@ void* list_pop( void* list, size_t index )
     }
     if ( src->free != NULL )
     {
-        src->free( (void**) src->data + src->per_size * index );
+        src->free( (void**) ( src->data + ( src->per_size * index ) ) );
     }
     memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + 1 ), src->per_size * ( src->size - index - 1 ) );
     if ( list_fit_cap( &src, --src->size ) )
@@ -335,3 +386,24 @@ void* list_pop( void* list, size_t index )
 }
 
 
+void* list_pops( void* restrict list, size_t index, size_t size )
+{
+    list_t* src = list_meta( list );
+    if ( index + size >= src->size )
+    {
+        return ( fprintf( stderr, "[ERRO]: pop index out of bounds.\n" ), list );
+    }
+    if ( src->free != NULL )
+    {
+        for ( size_t i = 0; i < size; i++ )
+        {
+            src->free( (void**) ( src->data + ( src->per_size * ( index + i ) ) ) );
+        }
+    }
+    memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + size ), src->per_size * ( src->size - index - size ) );
+    if ( list_fit_cap( &src, src->size -= size ) )
+    {
+        return (void*) src->data;
+    }
+    return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+}
