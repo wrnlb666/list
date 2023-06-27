@@ -1,2 +1,2 @@
-# slice
-slice in pure c2x
+# list/slice/array_list/vector
+list in pure C
