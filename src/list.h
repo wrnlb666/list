@@ -55,7 +55,7 @@ typedef struct
 // functions
 void*   list_new( list_args_t args );
 void    list_delete( void* list );
-size_t  list_size( void* list );                                    // get the current size of the list. 
+size_t  list_len( void* list );                                     // get the current size of the list. 
 void*   list_resize( void* list, size_t size );                     // Return new address if the array. You need to make sure data is valid if `list_desctructor` is set. 
 void*   list_grow( void* list, size_t size );                       // Return new address of the array. Do nothing if size is not bigger than current size. 
 void*   list_shrink( void* list, size_t size );                     // Return new address of the array. Do nothing if size is not smaller than current size. 

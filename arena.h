@@ -1,26 +1,5 @@
-// Copyright 2022 Alexey Kutepov <reximkut@gmail.com>
-
-// Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
-
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-#ifndef ARENA_H_
-#define ARENA_H_
+#ifndef __ARENA_H__
+#define __ARENA_H__
 
 #include <stddef.h>
 #include <stdint.h>
@@ -50,7 +29,7 @@ struct Region {
 
 typedef struct {
     Region *begin, *end;
-} Arena;
+} arena_t;
 
 #define REGION_DEFAULT_CAPACITY (8*1024)
 
@@ -61,11 +40,11 @@ void free_region(Region *r);
 // - Snapshot should be combination of a->end and a->end->count.
 // - Rewinding should be restoring a->end and a->end->count from the snapshot and
 // setting count-s of all the Region-s after the remembered a->end to 0.
-void *arena_alloc(Arena *a, size_t size_bytes);
-void *arena_realloc(Arena *a, void *oldptr, size_t oldsz, size_t newsz);
+void *arena_alloc(arena_t *a, size_t size_bytes);
+void *arena_realloc(arena_t *a, void *oldptr, size_t oldsz, size_t newsz);
 
-void arena_reset(Arena *a);
-void arena_free(Arena *a);
+void arena_reset(arena_t *a);
+void arena_free(arena_t *a);
 
 #endif // ARENA_H_
 
@@ -99,7 +78,7 @@ void free_region(Region *r)
 #elif ARENA_BACKEND == ARENA_BACKEND_WASM_HEAPBASE
 #  error "TODO: WASM __heap_base backend is not implemented yet"
 #else
-#  error "Unknown Arena backend"
+#  error "Unknown arena_t backend"
 #endif
 
 // TODO: add debug statistic collection mode for arena
@@ -108,7 +87,7 @@ void free_region(Region *r)
 // - How many times existing region was skipped
 // - How many times allocation exceeded REGION_DEFAULT_CAPACITY
 
-void *arena_alloc(Arena *a, size_t size_bytes)
+void *arena_alloc(arena_t *a, size_t size_bytes)
 {
     size_t size = (size_bytes + sizeof(uintptr_t) - 1)/sizeof(uintptr_t);
 
@@ -137,9 +116,28 @@ void *arena_alloc(Arena *a, size_t size_bytes)
     return result;
 }
 
-void *arena_realloc(Arena *a, void *oldptr, size_t oldsz, size_t newsz)
+void *arena_realloc(arena_t *a, void *oldptr, size_t oldsz, size_t newsz)
 {
     if (newsz <= oldsz) return oldptr;
+
+    if ((char*)oldptr + oldsz == (char*)&a->end->data[a->end->count]) {
+        a->end->count -= oldsz;
+        while(a->end->count + newsz > a->end->capacity && a->end->next != NULL) {
+            a->end = a->end->next;
+        }
+
+        if (a->end->count + newsz > a->end->capacity) {
+            ARENA_ASSERT(a->end->next == NULL);
+            size_t capacity = REGION_DEFAULT_CAPACITY;
+            if (capacity < newsz) capacity = newsz;
+            a->end->next = new_region(capacity);
+            a->end = a->end->next;
+        }
+
+        a->end->count += (newsz - oldsz);
+        return oldptr;
+    }
+
     void *newptr = arena_alloc(a, newsz);
     char *newptr_char = newptr;
     char *oldptr_char = oldptr;
@@ -149,7 +147,7 @@ void *arena_realloc(Arena *a, void *oldptr, size_t oldsz, size_t newsz)
     return newptr;
 }
 
-void arena_reset(Arena *a)
+void arena_reset(arena_t *a)
 {
     for (Region *r = a->begin; r != NULL; r = r->next) {
         r->count = 0;
@@ -158,7 +156,7 @@ void arena_reset(Arena *a)
     a->end = a->begin;
 }
 
-void arena_free(Arena *a)
+void arena_free(arena_t *a)
 {
     Region *r = a->begin;
     while (r) {

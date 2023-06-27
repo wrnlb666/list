@@ -1,5 +1,9 @@
 #include "list.h"
 
+#define DEFAULT_MINIMUM     64
+#define DEFAULT_THRESHOLD   1024
+#define DEFAULT_STEP_SIZE   512
+
 typedef struct
 {
     list_type_t        type;
@@ -26,7 +30,7 @@ static inline bool list_fit_cap( list_t** src, size_t size )
     size_t capacity;
     if ( (*src)->capacity == 0 )
     {
-        (*src)->capacity = 16;
+        (*src)->capacity = DEFAULT_MINIMUM;
         capacity = 0;
     }
     else
@@ -34,33 +38,33 @@ static inline bool list_fit_cap( list_t** src, size_t size )
         capacity = (*src)->capacity;
     }
     size_t old_size = sizeof (list_t) + (*src)->per_size * capacity;
-    if ( size < 16 ) cap = 16;
+    if ( size < DEFAULT_MINIMUM ) cap = DEFAULT_MINIMUM;
     else cap = size;
     if ( cap >= (*src)->capacity )
     {
         while ( (*src)->capacity < cap )
         {
-            if ( (*src)->capacity <= 1024 )
+            if ( (*src)->capacity <= DEFAULT_THRESHOLD )
             {
                 (*src)->capacity *= 2;
             }
             else
             {
-                (*src)->capacity += 512;
+                (*src)->capacity += DEFAULT_STEP_SIZE;
             }
         }
     }
     else
     {
-        while ( cap > 1024 )
+        while ( cap > DEFAULT_THRESHOLD )
         {
-            if ( cap + 512 < (*src)->capacity )
+            if ( cap + DEFAULT_STEP_SIZE < (*src)->capacity )
             {
-                (*src)->capacity -= 512;
+                (*src)->capacity -= DEFAULT_STEP_SIZE;
             }
             else break;
         }
-        while ( cap <= 1024 )
+        while ( cap <= DEFAULT_THRESHOLD )
         {
             if ( cap * 2 <= (*src)->capacity )
             {
@@ -160,7 +164,7 @@ void list_delete( void* list )
 }
 
 
-size_t list_size( void* list )
+size_t list_len( void* list )
 {
     list_t* src = list_meta( list );
     return src->size;
