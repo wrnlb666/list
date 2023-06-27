@@ -55,13 +55,13 @@ typedef struct
 // functions
 void*   list_new( list_args_t args );
 void    list_delete( void* list );
-size_t  list_len( void* list );                                     // get the current size of the list. 
-void*   list_resize( void* list, size_t size );                     // Return new address if the array. You need to make sure data is valid if `list_desctructor` is set. 
-void*   list_grow( void* list, size_t size );                       // Return new address of the array. Do nothing if size is not bigger than current size. 
-void*   list_shrink( void* list, size_t size );                     // Return new address of the array. Do nothing if size is not smaller than current size. 
-void*   list_append( void* list, /* T value */ ... );               // with LIST_STRUCT, pass in the address of the struct. Return new address of the array. 
-void*   list_insert( void* list, size_t index, size_t size, ... );  // Return new address of the array. 
-void*   list_pop( void* list, size_t index );                       // Return new address of the array. 
+size_t  list_len( void* list );                                                 // get the current size of the list. 
+void*   list_resize( void* list, size_t size );                                 // Return new address if the array. You need to make sure data is valid if `list_desctructor` is set. 
+void*   list_grow( void* list, size_t size );                                   // Return new address of the array. Do nothing if size is not bigger than current size. 
+void*   list_shrink( void* list, size_t size );                                 // Return new address of the array. Do nothing if size is not smaller than current size. 
+void*   list_append( void* list, /* T val */... );                              // with LIST_STRUCT, pass in the address of the struct. Return new address of the array. 
+void*   list_insert( void* list, size_t index, size_t size, /* T* arr */... );  // Return new address of the array. 
+void*   list_pop( void* list, size_t index );                                   // Return new address of the array. 
 
 
 
