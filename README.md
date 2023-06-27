@@ -10,6 +10,8 @@ int main( void )
 {
     // list creation
     int* arr = list_new( (list_args_t) { .type = LIST_I32 } );
+    // or you can do
+    // int* arr = list_new_args( LIST_I32 );
 
     // append in a for loop
     for ( int i = 0; i < 30; i++ )
