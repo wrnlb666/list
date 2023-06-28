@@ -122,20 +122,11 @@ void *arena_realloc(arena_t *a, void *oldptr, size_t oldsz, size_t newsz)
 
     if ((char*)oldptr + oldsz == (char*)&a->end->data[a->end->count]) {
         a->end->count -= oldsz;
-        while(a->end->count + newsz > a->end->capacity && a->end->next != NULL) {
-            a->end = a->end->next;
-        }
 
-        if (a->end->count + newsz > a->end->capacity) {
-            ARENA_ASSERT(a->end->next == NULL);
-            size_t capacity = REGION_DEFAULT_CAPACITY;
-            if (capacity < newsz) capacity = newsz;
-            a->end->next = new_region(capacity);
-            a->end = a->end->next;
+        if (a->end->count + newsz <= a->end->capacity) {
+            a->end->count += newsz;
+            return oldptr;
         }
-
-        a->end->count += (newsz - oldsz);
-        return oldptr;
     }
 
     void *newptr = arena_alloc(a, newsz);
