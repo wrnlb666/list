@@ -44,18 +44,18 @@ int main( void )
 {
     test_t** arr = list_new_args( LIST_PTR, .copy = copy, .alloc = (list_alloc_t) { list_allocate, list_reallocate, NULL } );
 
-    for ( size_t i = 0; i < 4500; i++ )
+    for ( size_t i = 0; i < 2000; i++ )
     {
         arr = list_append( arr, & (test_t) { .x = (int64_t) i, .y = (double) i } );
     }
 
-    // printf( "list_size: %zu\n", list_len(arr) );
-/*
+    printf( "list_size: %zu\n", list_len(arr) );
+
     for ( size_t i = 0; i < list_len(arr); i++ )
     {
         printf( "%3ld, %3.1lf\n", arr[i]->x, arr[i]->y );
     }
-*/
+
     list_delete( arr );
 
     arena_free( &list_arena );
