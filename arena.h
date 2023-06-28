@@ -120,13 +120,9 @@ void *arena_realloc(arena_t *a, void *oldptr, size_t oldsz, size_t newsz)
 {
     if (newsz <= oldsz) return oldptr;
 
-    if ((char*)oldptr + oldsz == (char*)&a->end->data[a->end->count]) {
-        a->end->count -= oldsz;
-
-        if (a->end->count + newsz <= a->end->capacity) {
-            a->end->count += newsz;
-            return oldptr;
-        }
+    if ((char*)oldptr + oldsz == (char*)&a->end->data[a->end->count] && a->end->count + (oldsz - newsz) <= a->end->capacity) {
+        a->end->count += (oldsz - newsz);
+        return oldptr;
     }
 
     void *newptr = arena_alloc(a, newsz);
