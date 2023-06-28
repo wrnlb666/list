@@ -17,10 +17,17 @@ static arena_t data_arena = { 0 };
 void copy( void** dest, const void* src )
 {
     test_t* d = arena_alloc( &data_arena, sizeof (test_t) );
+    // test_t* d = malloc( sizeof (test_t) );
     d->x = ( (test_t*) src )->x;
     d->y = ( (test_t*) src )->y;
     *dest = d;
     return;
+}
+
+void test_free( void** ptr )
+{
+    free( *ptr );
+    ptr = NULL;
 }
 
 static arena_t list_arena = { 0 };
@@ -37,19 +44,18 @@ int main( void )
 {
     test_t** arr = list_new_args( LIST_PTR, .copy = copy, .alloc = (list_alloc_t) { list_allocate, list_reallocate, NULL } );
 
-    for ( int i = 0; i < 2060; i++ )
+    for ( size_t i = 0; i < 4500; i++ )
     {
         arr = list_append( arr, & (test_t) { .x = (int64_t) i, .y = (double) i } );
     }
 
-    printf( "list_size: %zu\n", list_len(arr) );
-
+    // printf( "list_size: %zu\n", list_len(arr) );
+/*
     for ( size_t i = 0; i < list_len(arr); i++ )
     {
-        printf( "%3ld, %3.1lf\n", (*arr)[i].x, (*arr)[i].y );
+        printf( "%3ld, %3.1lf\n", arr[i]->x, arr[i]->y );
     }
-    printf( "\n" );
-
+*/
     list_delete( arr );
 
     arena_free( &list_arena );
