@@ -42,9 +42,9 @@ void* list_reallocate( void* ptr, size_t old_size, size_t new_size )
 
 int main( void )
 {
-    test_t** arr = list_create_args( LIST_PTR, .copy = copy, .alloc = (list_alloc_t) { list_allocate, list_reallocate, NULL } );
+    test_t** arr = list_create_args( LIST_PTR, .attr = (list_attr_t) { .copy = copy }, .alloc = (list_alloc_t) { list_allocate, list_reallocate, NULL } );
 
-    for ( size_t i = 0; i < 8000; i++ )
+    for ( size_t i = 0; i < 2000; i++ )
     {
         arr = list_append( arr, & (test_t) { .x = (int64_t) i, .y = (double) i } );
     }

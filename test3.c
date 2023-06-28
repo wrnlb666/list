@@ -10,13 +10,13 @@ int main( void )
     // int* arr = list_create_args( LIST_I32 );
 
     // append in a for loop
-    for ( int i = 0; i < 30; i++ )
+    for ( int i = 0; i < 50; i++ )
     {
         arr = list_append( arr, i );
     }
 
     // how to access list value? exactly like how you would access a normal array!
-    for ( int i = 0; i < 30; i++ )
+    for ( size_t i = 0; i < list_len(arr); i++ )
     {
         printf( "%3d", arr[i] );
     }

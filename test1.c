@@ -38,7 +38,7 @@ int main( void )
     {
         temp[i] = (test_t) { .x = i + 100, .y = i + 100 };
     }
-    arr = list_insert( arr, 100, 100, temp );
+    arr = list_inserts( arr, 100, 100, temp );
     free(temp);
 
     // get the length of the list and print the list

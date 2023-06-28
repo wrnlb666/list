@@ -6,13 +6,12 @@
 
 typedef struct
 {
-    list_type_t        type;
+    list_type_t         type;
     size_t              size;
     size_t              capacity;
     size_t              per_size;
-    list_deep_copy     copy;
-    list_desctructor   free;
-    list_alloc_t       alloc;
+    list_attr_t         attr;
+    list_alloc_t        alloc;
     char                data[];
 } list_t;
 
@@ -74,7 +73,8 @@ static inline bool list_fit_cap( list_t** restrict src, size_t size )
         }
     }
     if ( (*src)->capacity == capacity ) return true;
-    (*src) = (*src)->alloc.realloc( (*src), old_size,  sizeof ( list_t ) + (*src)->per_size * ( (*src)->capacity ) );
+    size_t new_size = sizeof ( list_t ) + (*src)->per_size * ( (*src)->capacity );
+    (*src) = (*src)->alloc.realloc( (*src), old_size, new_size );
     if ( (*src) == NULL ) return false; 
     return true;
 }
@@ -116,9 +116,8 @@ void* list_create( list_args_t args )
             .size       = 0,
             .capacity   = 0,
             .per_size   = size,
-            .copy       = args.copy,
-            .free       = args.free,
-            .alloc  = args.alloc,
+            .attr       = args.attr,
+            .alloc      = args.alloc,
         };
     }
     else
@@ -131,9 +130,8 @@ void* list_create( list_args_t args )
             .size       = 0,
             .capacity   = 0,
             .per_size   = size,
-            .copy       = args.copy,
-            .free       = args.free,
-            .alloc  = 
+            .attr       = args.attr,
+            .alloc      = 
             {
                 .malloc     = malloc,
                 .realloc    = default_realloc,
@@ -152,11 +150,11 @@ void* list_create( list_args_t args )
 void list_destroy( void* restrict list )
 {
     list_t* src = list_meta( list );
-    if ( src->free != NULL )
+    if ( src->attr.free != NULL )
     {
         for ( size_t i = 0; i < src->size; i++ )
         {
-            src->free( (void**) ( src->data + src->per_size * i ) );
+            src->attr.free( (void**) ( src->data + src->per_size * i ) );
         }
     }
     if ( src->alloc.free != NULL )
@@ -202,11 +200,11 @@ void* list_shrink( void* restrict list, size_t size )
     {
         return (void*) src->data;
     }
-    if ( src->free != NULL )
+    if ( src->attr.free != NULL )
     {
         for ( size_t i = size; i < src->size; i++ )
         {
-            src->free( (void**) ( src->data + src->per_size * i ) );
+            src->attr.free( (void**) ( src->data + src->per_size * i ) );
         }
     }
     if ( list_fit_cap( &src, size ) )
@@ -225,10 +223,10 @@ void* list_append( void* restrict list, ... )
     list_t* src = list_meta( list );
     if ( list_fit_cap( &src, src->size + 1 ) )
     {
-        if ( src->copy != NULL )
+        if ( src->attr.copy != NULL )
         {
             void* data = va_arg( ap, void* );
-            src->copy( (void**) ( src->data + src->per_size * src->size ), data );
+            src->attr.copy( (void**) ( src->data + src->per_size * src->size ), data );
         }
         else
         {
@@ -278,9 +276,9 @@ void* list_insert( void* restrict list, size_t index, ... )
     {
         memmove( src->data + src->per_size * ( index + 1 ), src->data + src->per_size * index, src->per_size * ( src->size - index ) );
         void* data = va_arg( ap, void* );
-        if ( src->copy != NULL )
+        if ( src->attr.copy != NULL )
         {
-            src->copy( (void**) ( src->data + src->per_size * index ), data );
+            src->attr.copy( (void**) ( src->data + src->per_size * index ), data );
         }
         else
         {
@@ -327,11 +325,11 @@ void* list_inserts( void* restrict list, size_t index, size_t size, ... )
     {
         memmove( src->data + src->per_size * ( index + size ), src->data + src->per_size * index, src->per_size * ( src->size - index ) );
         void* data = va_arg( ap, void* );
-        if ( src->copy != NULL )
+        if ( src->attr.copy != NULL )
         {
             for ( size_t i = 0; i < size; i++ )
             {
-                src->copy( (void**) ( src->data + src->per_size * ( index + i ) ), (char*) data + ( src->per_size * i ) );
+                src->attr.copy( (void**) ( src->data + src->per_size * ( index + i ) ), (char*) data + ( src->per_size * i ) );
             }
         }
         else
@@ -373,9 +371,9 @@ void* list_pop( void* restrict list, size_t index )
     {
         return ( fprintf( stderr, "[ERRO]: pop index out of bounds.\n" ), list );
     }
-    if ( src->free != NULL )
+    if ( src->attr.free != NULL )
     {
-        src->free( (void**) ( src->data + ( src->per_size * index ) ) );
+        src->attr.free( (void**) ( src->data + ( src->per_size * index ) ) );
     }
     memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + 1 ), src->per_size * ( src->size - index - 1 ) );
     if ( list_fit_cap( &src, --src->size ) )
@@ -393,11 +391,11 @@ void* list_pops( void* restrict list, size_t index, size_t size )
     {
         return ( fprintf( stderr, "[ERRO]: pop index out of bounds.\n" ), list );
     }
-    if ( src->free != NULL )
+    if ( src->attr.free != NULL )
     {
         for ( size_t i = 0; i < size; i++ )
         {
-            src->free( (void**) ( src->data + ( src->per_size * ( index + i ) ) ) );
+            src->attr.free( (void**) ( src->data + ( src->per_size * ( index + i ) ) ) );
         }
     }
     memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + size ), src->per_size * ( src->size - index - size ) );
