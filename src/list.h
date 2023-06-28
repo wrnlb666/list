@@ -43,17 +43,17 @@ typedef struct
 
 typedef struct
 {
-    list_type_t        type;    // type of the elements
+    list_type_t         type;   // type of the elements
     size_t              size;   // size of a single element
-    list_deep_copy     copy;    // copy constructor for custom element type
-    list_desctructor   free;    // desctructor for custom element type
-    list_alloc_t       alloc;   // cumstom alloc set for list
+    list_deep_copy      copy;   // copy constructor for custom element type
+    list_desctructor    free;   // desctructor for custom element type
+    list_alloc_t        alloc;  // cumstom alloc set for list
 } list_args_t;
 
 
 // functions
-void*   list_new( list_args_t args );
-void    list_delete( void* restrict list );
+void*   list_create( list_args_t args );                                                    // list constructor. Return a normal C like array. 
+void    list_destroy( void* restrict list );                                                // list destructor. Free the memory used by the list, also free each element if descturctor provided. 
 size_t  list_len( void* restrict list );                                                    // get the current size of the list. 
 void*   list_resize( void* restrict list, size_t size );                                    // Return new address if the array. You need to make sure data is valid if `list_desctructor` is set. 
 void*   list_grow( void* restrict list, size_t size );                                      // Return new address of the array. Do nothing if size is not bigger than current size. 
@@ -68,8 +68,8 @@ void*   list_pops( void* restrict list, size_t index, size_t size );            
 
 
 
-// list_new( list_type_t type, size_t size, list_deep_copy copy, list_desctructor free, list_alloc_t alloc );
-#define list_new_args( ... )               list_new( (list_args_t) { __VA_ARGS__ } );            
+// list_create( list_type_t type, size_t size, list_deep_copy copy, list_desctructor free, list_alloc_t alloc );
+#define list_create_args( ... )               list_create( (list_args_t) { __VA_ARGS__ } );            
 
 
 

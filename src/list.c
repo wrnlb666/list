@@ -87,7 +87,7 @@ static inline list_t* list_meta( void* restrict src )
 }
 
 
-void* list_new( list_args_t args )
+void* list_create( list_args_t args )
 {
     size_t size;
     switch ( args.type )
@@ -149,7 +149,7 @@ void* list_new( list_args_t args )
 }
 
 
-void list_delete( void* restrict list )
+void list_destroy( void* restrict list )
 {
     list_t* src = list_meta( list );
     if ( src->free != NULL )
