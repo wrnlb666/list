@@ -26,7 +26,7 @@ typedef enum
     LIST_STRUCT,   // struct
 } list_type_t;
 
-typedef void (*list_deep_copy)( void** dest, const void* restrict src );    // if not specified, memcpy will be performed for LIST_STRUCT, shallow copy for all others
+typedef void (*list_deep_copy)( void** dest, const void* restrict src );    // if not specified, memcpy will be performed for LIST_STRUCT, strdup will be performed for LIST_STR, shallow copy for all others
 typedef void (*list_desctructor)( void** ptr );                             // ptr will be the address of that element, so void** for LIST_PTR
 
 typedef void* (*list_malloc)( size_t size );                                        // malloc for custom allocator

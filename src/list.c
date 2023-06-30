@@ -157,6 +157,13 @@ void list_destroy( void* restrict list )
             src->attr.free( (void**) ( src->data + src->per_size * i ) );
         }
     }
+    else if ( src->type == LIST_STR )
+    {
+        for ( size_t i = 0; i < src->size; i++ )
+        {
+            free( ( (char**) src->data )[i] );
+        }
+    }
     if ( src->alloc.free != NULL )
     {
         src->alloc.free( src );
@@ -207,6 +214,13 @@ void* list_shrink( void* restrict list, size_t size )
             src->attr.free( (void**) ( src->data + src->per_size * i ) );
         }
     }
+    else if ( src->type == LIST_STR )
+    {
+        for ( size_t i = size; i < src->size; i++ )
+        {
+            free( ( (char**) src->data )[i] );
+        }
+    }
     if ( list_fit_cap( &src, size ) )
     {
         src->size = size;
@@ -241,7 +255,12 @@ void* list_append( void* restrict list, ... )
                 case LIST_U64:     ( (uint64_t*)   src->data )[ src->size ] = va_arg( ap, uint64_t );  break;
                 case LIST_F64:     ( (double*)     src->data )[ src->size ] = va_arg( ap, double );    break;
                 case LIST_PTR:     ( (void**)      src->data )[ src->size ] = va_arg( ap, void* );     break;
-                case LIST_STR:     ( (char**)      src->data )[ src->size ] = va_arg( ap, void* );     break;
+                case LIST_STR:
+                {
+                    char* str = va_arg( ap, char* );
+                    ( (char**) src->data )[ src->size ] = strdup(str);
+                    break;
+                }
                 case LIST_STRUCT:
                 {
                     void* data = va_arg( ap, void* );
@@ -293,10 +312,17 @@ void* list_insert( void* restrict list, size_t index, ... )
                 case LIST_U64:     
                 case LIST_F64:     
                 case LIST_PTR:
-                case LIST_STR:
                 case LIST_STRUCT:
+                {
                     memmove( src->data + src->per_size * index, data, src->per_size );
                     break;
+                }
+                case LIST_STR:
+                {
+                   char* str = va_arg( ap, char* );
+                    ( (char**) src->data )[ index ] = strdup(str);
+                    break;
+                }
                 default:
                 {
                     return ( fprintf( stderr, "[ERRO]: illegal type.\n" ), exit(1), NULL );
@@ -345,10 +371,19 @@ void* list_inserts( void* restrict list, size_t index, size_t size, ... )
                 case LIST_U64:     
                 case LIST_F64:     
                 case LIST_PTR:
-                case LIST_STR:
-                case LIST_STRUCT:     
+                case LIST_STRUCT:
+                {
                     memmove( src->data + src->per_size * index, data, src->per_size * size );
                     break;
+                }     
+                case LIST_STR:
+                {
+                    for ( size_t i = 0; i < size; i++ )
+                    {
+                        ( (char**) src->data )[ index + i ] = strdup( ( (char**) data )[i] );
+                    }
+                    break;
+                }
                 default:
                 {
                     return ( fprintf( stderr, "[ERRO]: illegal type.\n" ), exit(1), NULL );
@@ -375,6 +410,10 @@ void* list_pop( void* restrict list, size_t index )
     {
         src->attr.free( (void**) ( src->data + ( src->per_size * index ) ) );
     }
+    else if ( src->type == LIST_STR )
+    {
+        free( ( (char**) src->data )[index] );
+    }
     memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + 1 ), src->per_size * ( src->size - index - 1 ) );
     if ( list_fit_cap( &src, --src->size ) )
     {
@@ -396,6 +435,13 @@ void* list_pops( void* restrict list, size_t index, size_t size )
         for ( size_t i = 0; i < size; i++ )
         {
             src->attr.free( (void**) ( src->data + ( src->per_size * ( index + i ) ) ) );
+        }
+    }
+    else if ( src->type == LIST_STR )
+    {
+        for ( size_t i = 0; i < size; i++ )
+        {
+            free( ( (char**) src->data )[i] );
         }
     }
     memmove( src->data + src->per_size * index, src->data + src->per_size * ( index + size ), src->per_size * ( src->size - index - size ) );
