@@ -28,7 +28,6 @@ typedef enum
 
 typedef void (*list_deep_copy)( void** dest, const void* restrict src );    // if not specified, memcpy will be performed for LIST_STRUCT, shallow copy for all others
 typedef void (*list_desctructor)( void** ptr );                             // ptr will be the address of that element, so void** for LIST_PTR
-typedef int  (*list_cmpr)( const void** s1, const void** s2 );              // integer less than, integer equal, or integer greater than
 
 typedef void* (*list_malloc)( size_t size );                                        // malloc for custom allocator
 typedef void* (*list_realloc)( void* old_ptr, size_t old_size, size_t new_size );   // realloc for custom allocator
@@ -45,7 +44,6 @@ typedef struct
 {
     list_deep_copy      copy;   // copy constructor for custom element type
     list_desctructor    free;   // descturcot for custom element type
-    list_cmpr           cmpr;   // compare function for custom element type
 } list_attr_t;
 
 typedef struct
