@@ -17,7 +17,9 @@ int main( void )
     arr = list_append( arr, s3 );
     arr = list_append( arr, s4 );
     arr = list_append( arr, s5 );
-    arr = list_inserts( arr, 0, 5, s );
+    arr = list_inserts( arr, 5, 5, s );
+
+    arr = list_pop( arr, 4 );
 
     for ( size_t i = 0; i < list_len( arr ); i++ )
     {
