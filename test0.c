@@ -14,13 +14,13 @@ typedef struct
 } test_t;
 
 static arena_t data_arena = { 0 };
-void copy( void** dest, const void* src )
+void copy( void* dest, const void* src )
 {
     test_t* d = arena_alloc( &data_arena, sizeof (test_t) );
     // test_t* d = malloc( sizeof (test_t) );
     d->x = ( (test_t*) src )->x;
     d->y = ( (test_t*) src )->y;
-    *dest = d;
+    *(void**) dest = d;
     return;
 }
 

@@ -13,7 +13,7 @@ typedef struct str
 
 
 // copy constructor of str_t struct
-void str_copy( void** dest, const void* restrict src )
+void str_copy( void* dest, const void* restrict src )
 {
     size_t size = strlen( (char*) src );
     ( (str_t*) dest )->length = size;

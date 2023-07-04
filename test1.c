@@ -1,17 +1,12 @@
 // example for sturct
-
-
 #include "src/list.h"
 #include <stdint.h>
-
-
 
 typedef struct test
 {
     int64_t x;
     double  y;
 } test_t;
-
 
 int main( void )
 {

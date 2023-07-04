@@ -26,7 +26,7 @@ typedef enum
     LIST_STRUCT,   // struct
 } list_type_t;
 
-typedef void (*list_deep_copy)( void** dest, const void* restrict src );    // if not specified, memcpy will be performed for LIST_STRUCT, strdup will be performed for LIST_STR, shallow copy for all others
+typedef void (*list_deep_copy)( void* dest, const void* restrict src );     // if not specified, memcpy will be performed for LIST_STRUCT, strdup will be performed for LIST_STR, shallow copy for all others
 typedef void (*list_desctructor)( void* ptr );                              // need to be specified for inner allocations
 
 typedef void* (*list_malloc)( size_t size );                                        // malloc for custom allocator
@@ -72,7 +72,9 @@ void*   list_pops( void* restrict list, size_t index, size_t size );            
 
 
 
-// list_create( list_type_t type, size_t size, list_deep_copy copy, list_desctructor free, list_alloc_t alloc );
+// list_create( list_type_t type, size_t size, list_attr_t attr, list_alloc_t alloc );
+// .attr = { .copy, .free }
+// .alloc = { .malloc, .realloc, .free }
 #define list_create_args( ... )               list_create( (list_args_t) { __VA_ARGS__ } )           
 
 

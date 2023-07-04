@@ -240,7 +240,7 @@ void* list_append( void* restrict list, ... )
         if ( src->attr.copy != NULL )
         {
             void* data = va_arg( ap, void* );
-            src->attr.copy( (void**) ( src->data + src->per_size * src->size ), data );
+            src->attr.copy( ( src->data + src->per_size * src->size ), data );
         }
         else
         {
@@ -297,7 +297,7 @@ void* list_insert( void* restrict list, size_t index, ... )
         void* data = va_arg( ap, void* );
         if ( src->attr.copy != NULL )
         {
-            src->attr.copy( (void**) ( src->data + src->per_size * index ), data );
+            src->attr.copy( ( src->data + src->per_size * index ), data );
         }
         else
         {
@@ -355,7 +355,7 @@ void* list_inserts( void* restrict list, size_t index, size_t size, ... )
         {
             for ( size_t i = 0; i < size; i++ )
             {
-                src->attr.copy( (void**) ( src->data + src->per_size * ( index + i ) ), (char*) data + ( src->per_size * i ) );
+                src->attr.copy( ( src->data + src->per_size * ( index + i ) ), (char*) data + ( src->per_size * i ) );
             }
         }
         else
