@@ -23,16 +23,15 @@ void str_copy( void** dest, const void* restrict src )
 }
 
 // destructor of str_t struct
-void str_free( void** str )
+void str_free( void* str )
 {
     free( ( (str_t*) str )->string );
-    // ( (str_t*) str )->string = NULL;
 }
 
 
 int main( void )
 {
-    str_t* arr = list_create_args( LIST_STRUCT, sizeof (str_t), .attr = (list_attr_t) { .copy = str_copy, .free = str_free } );
+    str_t* arr = list_create_args( LIST_STRUCT, sizeof (str_t), .attr = { .copy = str_copy, .free = str_free } );
 
     char *arr1[] = { "Hello", " ", "World", "!", "\n" };
     size_t array_size = sizeof (arr1) / sizeof (char*);
