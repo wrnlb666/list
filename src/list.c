@@ -154,7 +154,7 @@ void list_destroy( void* restrict list )
     {
         for ( size_t i = 0; i < src->size; i++ )
         {
-            src->attr.free( (void**) ( src->data + src->per_size * i ) );
+            src->attr.free( (void*) ( src->data + src->per_size * i ) );
         }
     }
     else if ( src->type == LIST_STR )
@@ -211,7 +211,7 @@ void* list_shrink( void* restrict list, size_t size )
     {
         for ( size_t i = size; i < src->size; i++ )
         {
-            src->attr.free( (void**) ( src->data + src->per_size * i ) );
+            src->attr.free( (void*) ( src->data + src->per_size * i ) );
         }
     }
     else if ( src->type == LIST_STR )
@@ -247,7 +247,7 @@ void* list_append( void* restrict list, ... )
             switch ( src->type )
             {        
                 case LIST_CHAR:    ( (char*)       src->data )[ src->size ] = va_arg( ap, int );       break;
-                case LIST_WCHAR:   ( (wchar_t*)    src->data )[ src->size ] = va_arg( ap, wchar_t );   break;
+                case LIST_WCHAR:   ( (wchar_t*)    src->data )[ src->size ] = va_arg( ap, int );       break;
                 case LIST_I32:     ( (int32_t*)    src->data )[ src->size ] = va_arg( ap, int32_t );   break;
                 case LIST_U32:     ( (uint32_t*)   src->data )[ src->size ] = va_arg( ap, uint32_t );  break;
                 case LIST_F32:     ( (float*)      src->data )[ src->size ] = va_arg( ap, double );    break;
@@ -408,7 +408,7 @@ void* list_pop( void* restrict list, size_t index )
     }
     if ( src->attr.free != NULL )
     {
-        src->attr.free( (void**) ( src->data + ( src->per_size * index ) ) );
+        src->attr.free( (void*) ( src->data + ( src->per_size * index ) ) );
     }
     else if ( src->type == LIST_STR )
     {
@@ -434,7 +434,7 @@ void* list_pops( void* restrict list, size_t index, size_t size )
     {
         for ( size_t i = 0; i < size; i++ )
         {
-            src->attr.free( (void**) ( src->data + ( src->per_size * ( index + i ) ) ) );
+            src->attr.free( (void*) ( src->data + ( src->per_size * ( index + i ) ) ) );
         }
     }
     else if ( src->type == LIST_STR )
