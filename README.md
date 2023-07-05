@@ -1,5 +1,5 @@
 # list/slice/array_list/vector
-list in pure C
+list in pure C with runtime generic
 
 
 ## Example for quick start
