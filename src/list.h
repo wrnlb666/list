@@ -68,6 +68,8 @@ void*   list_insert( void* list, size_t index, /* T* arr */... );               
 void*   list_inserts( void* list, size_t index, size_t size, /* T* arr */... );     // Return new address of the array. Note that `arr` element must be the same type of list. 
 void*   list_pop( void* list, size_t index );                                       // Return new address of the array. 
 void*   list_pops( void* list, size_t index, size_t size );                         // Return new address of the array. 
+bool    list_serialize( void* restrict list, FILE* fp );                            // only value without any internal allocation can be serialized. Return true if success. 
+void*   list_deserialize( list_args_t args, FILE* fp );                             // only value without any internal allocation can be deserialized. Return `NULL` on failure. 
 
 
 

@@ -460,7 +460,7 @@ bool list_serialize( void* restrict list, FILE* fp )
     errno = 0;
     list_t* src = list_meta( list );
     // store per_size && size
-    uint32_t size_per_size[2] = { src->size, src->per_size };
+    uint32_t size_per_size[2] = { src->per_size, src->size };
     fwrite( &size_per_size, sizeof (uint32_t), 2, fp );
 
     // store all items
@@ -484,7 +484,7 @@ void* list_deserialize( list_args_t args, FILE* fp )
     uint32_t size_per_size[2];
     fread( &size_per_size, sizeof (uint32_t), 2, fp );
 
-    if ( src->size != size_per_size[0] )
+    if ( src->per_size != size_per_size[0] )
     {
         fprintf( stderr, "[ERRO]: type conflict, file corrupted.\n" );
         return NULL;
