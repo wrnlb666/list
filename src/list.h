@@ -2,6 +2,7 @@
 #define __LIST_H__
 
 #include <stdio.h>
+#include <errno.h>
 #include <wchar.h>
 #include <stdlib.h>
 #include <string.h>
@@ -56,17 +57,17 @@ typedef struct
 
 
 // functions
-void*   list_create( list_args_t args );                                                    // list constructor. Return a normal C like array. 
-void    list_destroy( void* restrict list );                                                // list destructor. Free the memory used by the list, also free each element if descturctor provided. 
-size_t  list_len( void* restrict list );                                                    // get the current size of the list. 
-void*   list_resize( void* restrict list, size_t size );                                    // Return new address if the array. You need to make sure data is valid if `list_desctructor` is set. 
-void*   list_grow( void* restrict list, size_t size );                                      // Return new address of the array. Do nothing if size is not bigger than current size. 
-void*   list_shrink( void* restrict list, size_t size );                                    // Return new address of the array. Do nothing if size is not smaller than current size. 
-void*   list_append( void* restrict list, /* T val */... );                                 // with LIST_STRUCT, pass in the address of the struct. Return new address of the array. 
-void*   list_insert( void* restrict list, size_t index, /* T* arr */... );                  // Return new address of the array. 
-void*   list_inserts( void* restrict list, size_t index, size_t size, /* T* arr */... );    // Return new address of the array. Note that `arr` element must be the same type of list. 
-void*   list_pop( void* restrict list, size_t index );                                      // Return new address of the array. 
-void*   list_pops( void* restrict list, size_t index, size_t size );                        // Return new address of the array. 
+void*   list_create( list_args_t args );                                            // list constructor. Return a normal C like array. 
+void    list_destroy( void* list );                                                 // list destructor. Free the memory used by the list, also free each element if descturctor provided. 
+size_t  list_len( void* list );                                                     // get the current size of the list. 
+void*   list_resize( void* list, size_t size );                                     // Return new address if the array. You need to make sure data is valid if `list_desctructor` is set. 
+void*   list_grow( void* list, size_t size );                                       // Return new address of the array. Do nothing if size is not bigger than current size. 
+void*   list_shrink( void* list, size_t size );                                     // Return new address of the array. Do nothing if size is not smaller than current size. 
+void*   list_append( void* list, /* T val */... );                                  // with LIST_STRUCT, pass in the address of the struct. Return new address of the array. 
+void*   list_insert( void* list, size_t index, /* T* arr */... );                   // Return new address of the array. 
+void*   list_inserts( void* list, size_t index, size_t size, /* T* arr */... );     // Return new address of the array. Note that `arr` element must be the same type of list. 
+void*   list_pop( void* list, size_t index );                                       // Return new address of the array. 
+void*   list_pops( void* list, size_t index, size_t size );                         // Return new address of the array. 
 
 
 

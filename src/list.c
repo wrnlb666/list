@@ -3,6 +3,8 @@
 #define DEFAULT_MINIMUM     64
 #define DEFAULT_THRESHOLD   1024
 #define DEFAULT_STEP_SIZE   512
+#define ASSERT_MEM(x)   if(x==NULL){fprintf(stderr,"[ERRO]: out of memory.\n");exit(1);}
+
 
 typedef struct
 {
@@ -109,7 +111,7 @@ void* list_create( list_args_t args )
     if ( args.alloc.malloc != NULL && args.alloc.realloc != NULL )
     {
         list = args.alloc.malloc( sizeof (list_t) );
-        if ( list == NULL ) return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+        ASSERT_MEM( list );
         *list = (list_t)
         {
             .type       = args.type,
@@ -123,7 +125,7 @@ void* list_create( list_args_t args )
     else
     {
         list = malloc( sizeof (list_t) );
-        if ( list == NULL ) return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+        ASSERT_MEM( list );
         *list = (list_t)
         {
             .type       = args.type,
@@ -184,7 +186,7 @@ void* list_resize( void* restrict list, size_t size )
 }
 
 
-void* list_grow( void* restrict list, size_t size )
+inline void* list_grow( void* restrict list, size_t size )
 {
     list_t* src = list_meta( list );
     if ( size <= src->size )
@@ -200,7 +202,7 @@ void* list_grow( void* restrict list, size_t size )
 }
 
 
-void* list_shrink( void* restrict list, size_t size )
+inline void* list_shrink( void* restrict list, size_t size )
 {
     list_t* src = list_meta( list );
     if ( size >= src->size )
@@ -450,4 +452,52 @@ void* list_pops( void* restrict list, size_t index, size_t size )
         return (void*) src->data;
     }
     return ( fprintf( stderr, "[ERRO]: out of memory.\n" ), exit(1), NULL );
+}
+
+
+bool list_serialize( void* restrict list, FILE* fp )
+{
+    errno = 0;
+    list_t* src = list_meta( list );
+    // store per_size && size
+    uint32_t size_per_size[2] = { src->size, src->per_size };
+    fwrite( &size_per_size, sizeof (uint32_t), 2, fp );
+
+    // store all items
+    fwrite( src->data, src->per_size, src->size, fp );
+
+    if ( errno != 0 )
+    {
+        fprintf( stderr, "[ERRO]: %s.\n", strerror(errno) );
+        return false;
+    }
+    return true;
+}
+
+
+void* list_deserialize( list_args_t args, FILE* fp )
+{
+    void* list = list_create( args );
+    list_t* src = list_meta( list );
+    
+    errno = 0;
+    uint32_t size_per_size[2];
+    fread( &size_per_size, sizeof (uint32_t), 2, fp );
+
+    if ( src->size != size_per_size[0] )
+    {
+        fprintf( stderr, "[ERRO]: type conflict, file corrupted.\n" );
+        return NULL;
+    }
+
+    list = list_grow( list, size_per_size[1] );
+    fread( list, size_per_size[0], size_per_size[1], fp );
+
+    if ( errno != 0 )
+    {
+        fprintf( stderr, "[ERRO]: %s.\n", strerror(errno) );
+        list_destroy( list );
+        return NULL;
+    }
+    return list;
 }
