@@ -1,6 +1,6 @@
 #include "list.h"
 
-#define DEFAULT_MINIMUM     64
+#define DEFAULT_MINIMUM     32
 #define DEFAULT_THRESHOLD   1024
 #define DEFAULT_STEP_SIZE   512
 #define ASSERT_MEM(x)   if(x==NULL){fprintf(stderr,"[ERRO]: out of memory.\n");exit(1);}
