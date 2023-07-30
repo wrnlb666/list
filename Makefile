@@ -26,7 +26,7 @@ list: $(DIR)/list.c $(DIR)/list.h
 	$(CC) $(CFLAG) -fPIC -shared $< -o lib$@.$(POST_FIX)
 
 test%: test%.c
-	$(CC) $(CFLAG) $< -o test $(LIB)
+	$(CC) $(CFLAG) -Wl,-rpath=./ $< -o test $(LIB)
 
 clean:
 	rm *.dll *.exe *.o $(ELF_FILES)
